@@ -58,6 +58,10 @@ Kotlin, Jetpack Compose with Material 3, Room, DataStore, Navigation Compose, Wo
 
 Ready to use.
 
+## License
+
+All Rights Reserved. See [LICENSE](LICENSE).
+
 ## Credits
 
 Food data from [Open Food Facts](https://world.openfoodfacts.org), available under the Open Database License. The built-in foods are typical values, not lab results. Calorie and nutrient targets are estimates, not medical advice.
