@@ -11,6 +11,8 @@
 <img alt="Works offline" src="https://img.shields.io/badge/works-offline-3D6BFF">
 </p>
 
+<img alt="Macrow on a phone: the daily diary with a calorie ring, the meal plan and the weight progress chart" src="docs/screenshots/hero-1920x1080.png" width="100%">
+
 <h2>About</h2>
 
 <p>Macrow is a food diary for one person. You log what you eat, scan a barcode when you have a packaged food, and see your calories, protein, carbs and fat against a daily target worked out from your own numbers. You plan meals ahead, track your weight, and see which vitamins and minerals you are getting.</p>
