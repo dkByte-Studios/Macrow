@@ -3,6 +3,9 @@
 
     <!-- Only for Open Food Facts barcode and name lookups. Nothing else leaves the phone. -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Only asked for when you open the barcode scanner. Pictures are read on the phone and never saved or sent. -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
     <!-- Only asked for when you switch on the meal reminder. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 

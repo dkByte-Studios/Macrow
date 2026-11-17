@@ -24,10 +24,11 @@
 ## Features
 
 - **Daily diary.** Log breakfast, lunch, dinner and snacks. A calorie ring shows what is left, with bars for protein, carbs and fat. Go back to any earlier day.
-- **Foods ready to use.** About 70 common Filipino and everyday foods come built in, such as adobo, sinigang, pandesal and sinangag. Edit any of them.
-- **Search and scan.** Search your foods, or look one up online. Scan a barcode, or type its numbers, to fill in the nutrition facts. Foods you look up are kept for next time.
+- **Foods ready to use.** Close to 200 foods come built in: Filipino favorites like adobo, sinigang and pandesal, and everyday foods from around the world, such as salmon, pasta, sushi, burritos and oats. Edit any of them.
+- **Search and scan.** Search your foods, or look one up online. Point the camera at a barcode, or type its numbers, to fill in the nutrition facts. Foods you look up are kept for next time.
 - **Your own foods and recipes.** Create a food, or build a recipe from ingredients and log one serving of it.
 - **Targets that fit you.** Tell Macrow your goal, age, height, weight and activity. It works out your calories and macros, and you can change them any time.
+- **Diet coach.** Every day gets a short review: what you ate, how your calories split between protein, carbs and fat, what went well, and what to fix. It points out low protein, high salt, a heavy dinner or too little water, and suggests foods that would help. It runs on your phone from your own numbers.
 - **Meal plan.** Plan each day of the week and see how the plan compares with your targets. One tap copies a planned day into your diary.
 - **Weight and progress.** Log your weight and watch a trend line. See your last 7 days of calories and your logging streak.
 - **Vitamins and minerals.** See fiber, iron, calcium, vitamin C, potassium, sodium and sugar for today or as a weekly average.
@@ -48,11 +49,11 @@
 
 - An Android phone with Android 8.0 or newer.
 - Internet only when you search or scan a food online. Everything else works offline.
-- The camera scanner uses Google Play services. Without it you can still type a barcode.
+- Camera permission, only if you want to scan barcodes. Pictures are read on the phone and never saved or sent. You can always type the barcode instead.
 
 ## Built with
 
-Kotlin, Jetpack Compose with Material 3, Room, DataStore, Navigation Compose, WorkManager, the Google code scanner, Open Food Facts, Gradle (Kotlin DSL) with a version catalog. Fonts: Bricolage Grotesque and Figtree (bundled).
+Kotlin, Jetpack Compose with Material 3, Room, DataStore, Navigation Compose, WorkManager, CameraX, ML Kit barcode scanning, Open Food Facts, Gradle (Kotlin DSL) with a version catalog. Fonts: Bricolage Grotesque and Figtree (bundled).
 
 ## Status
 

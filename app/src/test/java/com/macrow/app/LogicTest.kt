@@ -131,11 +131,12 @@ class LogicTest {
     }
 
     @Test fun builtInFoodsAreSane() {
-        assertTrue(BuiltInFoods.size > 50)
+        assertTrue(BuiltInFoods.size > 180)
         assertTrue(BuiltInFoods.all { it.source == Source.BUILTIN && it.name.isNotBlank() && it.kcal >= 0 && it.servingGrams > 0 })
         assertEquals(BuiltInFoods.size, BuiltInFoods.map { it.name }.toSet().size)
         // Calories roughly match the macros (4/4/9), within 25 percent, for foods with any calories.
-        BuiltInFoods.filter { it.kcal >= 50 }.forEach {
+        // Beer and wine get calories from alcohol, which the macros do not show.
+        BuiltInFoods.filter { it.kcal >= 50 && !it.name.startsWith("Beer") && !it.name.startsWith("Red wine") }.forEach {
             val est = it.protein * 4 + it.carbs * 4 + it.fat * 9
             assertTrue("${it.name}: ${it.kcal} vs $est", est in it.kcal * 0.75..it.kcal * 1.25)
         }

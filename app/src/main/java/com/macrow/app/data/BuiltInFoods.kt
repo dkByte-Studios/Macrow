@@ -1,10 +1,10 @@
 package com.macrow.app.data
 
 /**
- * Common Filipino and everyday foods, loaded once on first run. The numbers are typical values rounded
+ * Common Filipino foods, loaded once on first run. The numbers are typical values rounded
  * for one serving, not lab results: edit any food, or add your own, when yours differs.
  */
-private fun f(
+internal fun f(
     name: String, serving: String, grams: Int, kcal: Int, p: Double, c: Double, fat: Double,
     fiber: Double, sugar: Double, na: Int, fe: Double, ca: Int, vc: Int, k: Int,
 ) = Food(
@@ -13,7 +13,7 @@ private fun f(
     source = Source.BUILTIN,
 )
 
-val BuiltInFoods: List<Food> = listOf(
+val FilipinoFoods: List<Food> = listOf(
     // Rice, bread and noodles
     f("Steamed white rice", "1 cup", 160, 205, 4.3, 44.5, 0.4, 0.6, 0.1, 2, 0.2, 16, 0, 55),
     f("Brown rice, cooked", "1 cup", 195, 216, 5.0, 45.0, 1.8, 3.5, 0.7, 10, 0.8, 20, 0, 84),
@@ -88,3 +88,8 @@ val BuiltInFoods: List<Food> = listOf(
     f("Halo-halo", "1 glass", 350, 340, 6.0, 65.0, 8.0, 3.0, 45.0, 90, 1.0, 150, 2, 350),
     f("Turon", "1 piece", 80, 220, 2.0, 36.0, 8.0, 2.0, 20.0, 10, 0.6, 12, 4, 200),
 )
+
+/** Bump this when foods are added to the lists, so phones that already have the old list get the new ones too. */
+const val BUILTIN_VERSION = 2
+
+val BuiltInFoods: List<Food> = FilipinoFoods + WorldFoods

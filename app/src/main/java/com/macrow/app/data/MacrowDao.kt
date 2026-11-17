@@ -22,6 +22,8 @@ interface MacrowDao {
     @Query("SELECT * FROM foods WHERE barcode = :code AND archived = 0 LIMIT 1") suspend fun foodByBarcode(code: String): Food?
     @Query("SELECT * FROM foods WHERE source = 'ONLINE' AND name = :name AND brand = :brand AND archived = 0 LIMIT 1") suspend fun onlineByName(name: String, brand: String): Food?
     @Query("SELECT COUNT(*) FROM foods") suspend fun foodCount(): Int
+    @Query("SELECT * FROM foods WHERE archived = 0 AND kcal > 0") suspend fun allActive(): List<Food>
+    @Query("SELECT name FROM foods WHERE source = 'BUILTIN'") suspend fun builtinNames(): List<String>
     @Insert suspend fun insertFood(food: Food): Long
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insertFoods(foods: List<Food>)
     @Update suspend fun updateFood(food: Food)

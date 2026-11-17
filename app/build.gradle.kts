@@ -14,8 +14,10 @@ android {
         applicationId = "com.macrow.app"
         minSdk = 26
         targetSdk = 37
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.1"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64") } // real phones and the emulator; drops the rare 32-bit x86
     }
 
     // Release signing: put your own keystore details in keystore.properties (see README).
@@ -78,8 +80,14 @@ dependencies {
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.work.runtime)
-    implementation(libs.gms.code.scanner)
+    implementation(libs.camera.core)
+    implementation(libs.camera.camera2)
+    implementation(libs.camera.lifecycle)
+    implementation(libs.camera.view)
+    implementation(libs.mlkit.barcode) // reads barcodes on the phone, no Google Play services download needed
 
     testImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation(libs.androidx.test.runner)
     testImplementation(libs.org.json) // the phone has org.json built in; plain JVM tests need it
 }

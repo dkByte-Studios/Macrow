@@ -1,13 +1,19 @@
 package com.macrow.app.ui.screens
 
-import android.content.Context
+import android.Manifest
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.provider.Settings
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,8 +22,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.CameraAlt
 import androidx.compose.material.icons.rounded.QrCodeScanner
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -25,18 +33,23 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.google.mlkit.vision.barcode.common.Barcode
-import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions
-import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
 import com.macrow.app.data.OpenFoodFacts
 import com.macrow.app.domain.Meal
 import com.macrow.app.ui.ScanState
@@ -49,24 +62,10 @@ import com.macrow.app.ui.components.MacrowCard
 import com.macrow.app.ui.components.MacrowField
 import com.macrow.app.ui.components.SoftButton
 import com.macrow.app.ui.components.TopBar
+import com.macrow.app.ui.components.rememberHaptic
 import com.macrow.app.ui.macrowVm
 import com.macrow.app.ui.theme.Tone
 import com.macrow.app.ui.theme.macrow
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
-
-/** Opens Google's barcode scanner (no camera permission needed). Returns the code, or null if you closed it. */
-suspend fun scanBarcode(context: Context): String? = suspendCancellableCoroutine { cont ->
-    val options = GmsBarcodeScannerOptions.Builder()
-        .setBarcodeFormats(Barcode.FORMAT_EAN_13, Barcode.FORMAT_EAN_8, Barcode.FORMAT_UPC_A, Barcode.FORMAT_UPC_E)
-        .build()
-    GmsBarcodeScanning.getClient(context, options).startScan()
-        .addOnSuccessListener { if (cont.isActive) cont.resume(it.rawValue) }
-        .addOnCanceledListener { if (cont.isActive) cont.resume(null) }
-        .addOnFailureListener { if (cont.isActive) cont.resumeWithException(it) }
-}
 
 @Composable
 fun ScanScreen(planned: Boolean, meal: Meal, day: Long, newFoodId: Long, onNewFoodHandled: () -> Unit, onBack: () -> Unit, onCreateWithBarcode: (String) -> Unit) {
@@ -74,52 +73,70 @@ fun ScanScreen(planned: Boolean, meal: Meal, day: Long, newFoodId: Long, onNewFo
     val p = MaterialTheme.macrow
     val state by vm.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
+    val haptic = rememberHaptic()
     var manual by rememberSaveable { mutableStateOf("") }
-    var started by rememberSaveable { mutableStateOf(false) }
+    var granted by remember { mutableStateOf(hasCamera(context)) }
+    var denied by rememberSaveable { mutableStateOf(false) }
 
-    fun scan() {
-        scope.launch {
-            try {
-                scanBarcode(context)?.let { vm.lookup(it) }
-            } catch (e: kotlinx.coroutines.CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                vm.fail("The scanner isn't available right now. Type the barcode below instead.")
-            }
-        }
+    val askCamera = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { ok ->
+        granted = ok
+        denied = !ok
     }
-
+    // Coming back from Android settings after turning the camera on.
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { granted = hasCamera(context) }
+    // Ask once when the screen opens; this is the one place the camera is needed.
+    LaunchedEffect(Unit) { if (!granted && !denied) askCamera.launch(Manifest.permission.CAMERA) }
     // A food you just created for a barcode opens its log sheet when you come back.
-    LaunchedEffect(newFoodId) { if (newFoodId > 0) { vm.openFood(newFoodId); started = true; onNewFoodHandled() } }
-
-    // Open the scanner once on arrival, but not again after a rotation.
-    LaunchedEffect(Unit) {
-        if (!started) { started = true; scan() }
-    }
+    LaunchedEffect(newFoodId) { if (newFoodId > 0) { vm.openFood(newFoodId); onNewFoodHandled() } }
 
     Column(Modifier.fillMaxSize().imePadding()) {
         TopBar("Scan a barcode", onBack = onBack)
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
             AnimatedContent(
                 state,
-                transitionSpec = { (fadeIn(tween(240)) + slideInVertically(tween(260)) { it / 16 }) togetherWith fadeOut(tween(120)) },
+                transitionSpec = { fadeIn(tween(240)) togetherWith fadeOut(tween(120)) },
                 contentKey = { it::class },
                 label = "scanState",
             ) { s ->
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    when (s) {
-                        ScanState.Idle -> EmptyState(Icons.Rounded.QrCodeScanner, "Scan a package", "Point the camera at the barcode and the nutrition facts fill in. Foods you scan are kept for next time.")
-                        ScanState.Looking -> EmptyState(Icons.Rounded.QrCodeScanner, "Looking it up…", "Checking your foods first, then Open Food Facts.")
-                        is ScanState.Found -> EmptyState(Icons.Rounded.QrCodeScanner, "Found it", s.food.name)
-                        is ScanState.Missing -> EmptyState(Icons.Rounded.QrCodeScanner, "Not in the database", "Barcode ${s.code} isn't in Open Food Facts yet. You can add it as your own food.") {
-                            GradientButton("Create food with this barcode", { onCreateWithBarcode(s.code) })
+                when (s) {
+                    ScanState.Idle -> if (granted) {
+                        Box(Modifier.fillMaxWidth().height(320.dp).clip(RoundedCornerShape(28.dp)).background(p.ink)) {
+                            CameraScanner(
+                                onCode = { code -> haptic(HapticFeedbackType.Confirm); vm.lookup(code) },
+                                onError = { vm.fail(it) },
+                                modifier = Modifier.fillMaxSize(),
+                            )
+                            Text(
+                                "Point at a barcode", Modifier.align(Alignment.BottomCenter).padding(bottom = 14.dp),
+                                style = MaterialTheme.typography.labelLarge, color = androidx.compose.ui.graphics.Color.White,
+                            )
                         }
-                        is ScanState.Failed -> EmptyState(Icons.Rounded.QrCodeScanner, "Couldn't look that up", s.message)
+                    } else {
+                        EmptyState(
+                            Icons.Rounded.CameraAlt,
+                            if (denied) "Camera is off" else "Camera needed to scan",
+                            if (denied) "Macrow can't see the camera. Turn it on in Android settings, or type the barcode below." else "Macrow reads the barcode on your phone. No picture is saved or sent.",
+                        ) {
+                            if (denied) {
+                                GradientButton("Open settings", { context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, "package:${context.packageName}".toUri())) })
+                            } else {
+                                GradientButton("Allow camera", { askCamera.launch(Manifest.permission.CAMERA) })
+                            }
+                        }
+                    }
+                    ScanState.Looking -> EmptyState(Icons.Rounded.QrCodeScanner, "Looking it up…", "Checking your foods first, then Open Food Facts.")
+                    is ScanState.Found -> EmptyState(Icons.Rounded.QrCodeScanner, "Found it", s.food.name)
+                    is ScanState.Missing -> EmptyState(Icons.Rounded.QrCodeScanner, "Not in the database", "Barcode ${s.code} isn't in Open Food Facts yet. You can add it as your own food.") {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            GradientButton("Create food with this barcode", { onCreateWithBarcode(s.code) })
+                            SoftButton("Scan another", { vm.reset() })
+                        }
+                    }
+                    is ScanState.Failed -> EmptyState(Icons.Rounded.QrCodeScanner, "Couldn't look that up", s.message) {
+                        SoftButton("Try again", { vm.reset() })
                     }
                 }
             }
-            GradientButton("Scan with the camera", { vm.reset(); scan() }, Modifier.fillMaxWidth(), icon = Icons.Rounded.QrCodeScanner)
             MacrowCard {
                 Text("Or type the numbers under the barcode", style = MaterialTheme.typography.titleSmall)
                 Spacer(Modifier.height(8.dp))
@@ -132,6 +149,10 @@ fun ScanScreen(planned: Boolean, meal: Meal, day: Long, newFoodId: Long, onNewFo
                 Spacer(Modifier.height(8.dp))
                 SoftButton("Look up", { if (valid) vm.lookup(manual) else UiErrors.say("Enter 8 to 14 digits.") }, Modifier.fillMaxWidth(), tone = Tone.Blue)
             }
+            Text(
+                "Scanned foods come from Open Food Facts and are kept on your phone for next time.",
+                style = MaterialTheme.typography.bodySmall, color = p.muted, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth(),
+            )
             Spacer(Modifier.height(24.dp))
         }
     }
@@ -148,3 +169,6 @@ fun ScanScreen(planned: Boolean, meal: Meal, day: Long, newFoodId: Long, onNewFo
         )
     }
 }
+
+private fun hasCamera(context: android.content.Context) =
+    ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED

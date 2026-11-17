@@ -19,9 +19,20 @@ class MacrowRepository(private val db: MacrowDatabase, private val store: Settin
     }
 
     // Foods
+    /** Loads the built-in foods on first run, and adds new ones to a phone that has an older list. Nothing already there is changed. */
     suspend fun ensureSeeded() {
-        if (dao.foodCount() == 0) dao.insertFoods(BuiltInFoods)
+        if (dao.foodCount() == 0) {
+            dao.insertFoods(BuiltInFoods)
+            store.setBuiltinVersion(BUILTIN_VERSION)
+        } else if (store.builtinVersion() < BUILTIN_VERSION) {
+            val have = dao.builtinNames().toSet()
+            dao.insertFoods(BuiltInFoods.filter { it.name !in have })
+            store.setBuiltinVersion(BUILTIN_VERSION)
+        }
     }
+
+    /** Every food the coach may suggest from. */
+    suspend fun suggestionPool(): List<Food> = dao.allActive()
 
     fun foods(query: String, filter: String): Flow<List<Food>> = dao.searchFoods(likeEscape(query), filter)
     suspend fun food(id: Long): Food? = dao.food(id)

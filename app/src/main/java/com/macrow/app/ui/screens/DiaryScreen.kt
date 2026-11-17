@@ -42,7 +42,15 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.macrow.app.data.MacrowRepository
+import com.macrow.app.domain.CoachInput
+import com.macrow.app.domain.Eaten
 import com.macrow.app.domain.Meal
+import com.macrow.app.domain.coach
+import com.macrow.app.ui.UiErrors
+import com.macrow.app.ui.components.CoachCard
+import com.macrow.app.ui.components.CoachSheet
+import com.macrow.app.ui.components.LogSheet
+import androidx.compose.runtime.remember
 import com.macrow.app.domain.kcalText
 import com.macrow.app.ui.LocalSnack
 import com.macrow.app.ui.components.CappedFont
@@ -85,6 +93,9 @@ fun DiaryScreen(onAddFood: (Meal, Long) -> Unit, onSettings: () -> Unit) {
     val entries by vm.entries.collectAsStateWithLifecycle()
     val water by vm.water.collectAsStateWithLifecycle()
     val streak by vm.streak.collectAsStateWithLifecycle()
+    val pool by vm.pool.collectAsStateWithLifecycle()
+    var coachOpen by rememberSaveable { mutableStateOf(false) }
+    var suggestedId by rememberSaveable { mutableStateOf<Long?>(null) }
     var editingId by rememberSaveable { mutableStateOf<Long?>(null) }
     val snack = LocalSnack.current
     val scope = rememberCoroutineScope()
@@ -94,6 +105,15 @@ fun DiaryScreen(onAddFood: (Meal, Long) -> Unit, onSettings: () -> Unit) {
     val left = t.kcal - total.kcal
     val over = left < 0
     val isToday = day >= MacrowRepository.today()
+    val review = remember(entries, settings, water, day, streak, pool) {
+        coach(
+            CoachInput(
+                eaten = entries.map { Eaten(Meal.of(it.entry.meal), it.food.name, it.nutrients) },
+                targets = t, goal = settings.profile.goal, sex = settings.profile.sex, waterMl = water, waterGoalMl = settings.waterGoalMl,
+                isToday = isToday, hour = java.time.LocalTime.now().hour, streak = streak, pool = pool,
+            ),
+        )
+    }
 
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).statusBarsPadding().padding(horizontal = 16.dp)) {
         Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -128,6 +148,8 @@ fun DiaryScreen(onAddFood: (Meal, Long) -> Unit, onSettings: () -> Unit) {
             }
         }
         Spacer(Modifier.height(12.dp))
+        CoachCard(review, { coachOpen = true }, Modifier.fillMaxWidth())
+        Spacer(Modifier.height(12.dp))
 
         MacrowCard {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -160,6 +182,15 @@ fun DiaryScreen(onAddFood: (Meal, Long) -> Unit, onSettings: () -> Unit) {
             Spacer(Modifier.height(10.dp))
         }
         Spacer(Modifier.height(112.dp))
+    }
+
+    if (coachOpen) CoachSheet(review, onSuggestion = { coachOpen = false; suggestedId = it.id }, onDismiss = { coachOpen = false })
+    pool.firstOrNull { it.id == suggestedId }?.let { f ->
+        LogSheet(
+            f, Meal.forHour(java.time.LocalTime.now().hour), "Add to diary",
+            onConfirm = { m, servings -> vm.add(day, m.name, f, servings); suggestedId = null; UiErrors.say("Added ${f.name} to ${m.label.lowercase()}") },
+            onDismiss = { suggestedId = null },
+        )
     }
 
     entries.firstOrNull { it.entry.id == editingId }?.let { e ->

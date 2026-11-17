@@ -18,6 +18,7 @@ import com.macrow.app.domain.Targets
 import com.macrow.app.domain.targetsFor
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import java.io.IOException
 
@@ -61,6 +62,7 @@ class SettingsStore(private val context: Context) {
     private val auto = booleanPreferencesKey("auto_backup")
     private val last = longPreferencesKey("backup_last")
     private val error = stringPreferencesKey("backup_error")
+    private val builtinVersion = intPreferencesKey("builtin_version")
 
     val settings: Flow<Settings> = context.dataStore.data.catch { if (it is IOException) emit(emptyPreferences()) else throw it }.map { read(it) }
 
@@ -90,6 +92,9 @@ class SettingsStore(private val context: Context) {
             backupError = p[error],
         )
     }
+
+    suspend fun builtinVersion(): Int = context.dataStore.data.first()[builtinVersion] ?: 0
+    suspend fun setBuiltinVersion(v: Int) { context.dataStore.edit { it[builtinVersion] = v } }
 
     suspend fun setDarkMode(on: Boolean) { context.dataStore.edit { it[dark] = on } }
     suspend fun setHaptics(on: Boolean) { context.dataStore.edit { it[haptics] = on } }

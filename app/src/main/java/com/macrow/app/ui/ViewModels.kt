@@ -68,6 +68,15 @@ class DiaryVm(private val repo: MacrowRepository) : ViewModel() {
     val water = day.flatMapLatest { repo.water(it) }.hold(viewModelScope, 0)
     val streak = combine(repo.loggedDays(), todayFlow()) { days, t -> loggingStreak(days.toSet(), t) }.hold(viewModelScope, 0)
 
+    /** Foods the coach can suggest, read once when the diary opens. */
+    val pool = MutableStateFlow<List<Food>>(emptyList())
+
+    init {
+        viewModelScope.launch(safeLaunch) { pool.value = repo.suggestionPool() }
+    }
+
+    fun add(day: Long, meal: String, food: Food, servings: Double) = viewModelScope.launch(safeLaunch) { repo.addEntry(day, meal, food, servings, false) }
+
     fun shift(days: Int) = day.update { it + days }
     fun goToday() { day.value = MacrowRepository.today() }
     fun addWater(ml: Int) = viewModelScope.launch(safeLaunch) { repo.addWater(day.value, ml) }
