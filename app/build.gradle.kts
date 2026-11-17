@@ -14,10 +14,10 @@ android {
         applicationId = "com.macrow.app"
         minSdk = 26
         targetSdk = 37
-        versionCode = 3
-        versionName = "1.2"
+        versionCode = 4
+        versionName = "1.3"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64") } // real phones and the emulator; drops the rare 32-bit x86
+        ndk { abiFilters += listOf("arm64-v8a", "x86_64") } // modern 64-bit phones and the emulator: the on-device readers are large, so old 32-bit phones are left out
     }
 
     // Release signing: put your own keystore details in keystore.properties (see README).
@@ -84,6 +84,7 @@ dependencies {
     implementation(libs.camera.camera2)
     implementation(libs.camera.lifecycle)
     implementation(libs.camera.view)
+    implementation(libs.mlkit.text) // reads nutrition labels on the phone
     implementation(libs.mlkit.barcode) // reads barcodes on the phone, no Google Play services download needed
 
     testImplementation(libs.junit)

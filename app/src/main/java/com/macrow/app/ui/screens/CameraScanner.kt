@@ -7,6 +7,7 @@ import androidx.camera.core.CameraSelector
 import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.Preview
+import androidx.camera.core.UseCase
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Canvas
@@ -73,6 +74,7 @@ fun CameraScanner(onCode: (String) -> Unit, onError: (String) -> Unit, modifier:
         )
         val found = AtomicBoolean(false)
         var provider: ProcessCameraProvider? = null
+        var mine: Array<UseCase> = emptyArray()
         val future = ProcessCameraProvider.getInstance(context)
         future.addListener({
             try {
@@ -94,14 +96,14 @@ fun CameraScanner(onCode: (String) -> Unit, onError: (String) -> Unit, modifier:
                             .addOnCompleteListener { proxy.close() }
                     }
                 }
-                p.unbindAll()
+                mine = arrayOf(preview, analysis)
                 camera = p.bindToLifecycle(owner, CameraSelector.DEFAULT_BACK_CAMERA, preview, analysis)
             } catch (e: Exception) {
                 latestError("The camera could not start. Type the barcode below instead.")
             }
         }, ContextCompat.getMainExecutor(context))
         onDispose {
-            runCatching { provider?.unbindAll() }
+            runCatching { if (mine.isNotEmpty()) provider?.unbind(*mine) }
             reader.close()
             executor.shutdown()
             camera = null

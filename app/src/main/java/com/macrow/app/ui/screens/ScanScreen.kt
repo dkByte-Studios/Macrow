@@ -26,6 +26,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.CameraAlt
+import androidx.compose.material.icons.rounded.CameraAlt
 import androidx.compose.material.icons.rounded.QrCodeScanner
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -68,7 +69,7 @@ import com.macrow.app.ui.theme.Tone
 import com.macrow.app.ui.theme.macrow
 
 @Composable
-fun ScanScreen(planned: Boolean, meal: Meal, day: Long, newFoodId: Long, onNewFoodHandled: () -> Unit, onBack: () -> Unit, onCreateWithBarcode: (String) -> Unit) {
+fun ScanScreen(planned: Boolean, meal: Meal, day: Long, newFoodId: Long, onNewFoodHandled: () -> Unit, onBack: () -> Unit, onCreateWithBarcode: (String) -> Unit, onScanLabel: (String?) -> Unit) {
     val vm = macrowVm { ScanVm(it) }
     val p = MaterialTheme.macrow
     val state by vm.state.collectAsStateWithLifecycle()
@@ -128,7 +129,8 @@ fun ScanScreen(planned: Boolean, meal: Meal, day: Long, newFoodId: Long, onNewFo
                     is ScanState.Found -> EmptyState(Icons.Rounded.QrCodeScanner, "Found it", s.food.name)
                     is ScanState.Missing -> EmptyState(Icons.Rounded.QrCodeScanner, "Not in the database", "Barcode ${s.code} isn't in Open Food Facts yet. You can add it as your own food.") {
                         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            GradientButton("Create food with this barcode", { onCreateWithBarcode(s.code) })
+                            GradientButton("Scan its nutrition label", { onScanLabel(s.code) })
+                            SoftButton("Type the numbers myself", { onCreateWithBarcode(s.code) })
                             SoftButton("Scan another", { vm.reset() })
                         }
                     }
@@ -149,6 +151,7 @@ fun ScanScreen(planned: Boolean, meal: Meal, day: Long, newFoodId: Long, onNewFo
                 Spacer(Modifier.height(8.dp))
                 SoftButton("Look up", { if (valid) vm.lookup(manual) else UiErrors.say("Enter 8 to 14 digits.") }, Modifier.fillMaxWidth(), tone = Tone.Blue)
             }
+            SoftButton("Scan a nutrition label", { onScanLabel(null) }, Modifier.fillMaxWidth(), tone = Tone.Gold, icon = Icons.Rounded.CameraAlt)
             Text(
                 "Scanned foods come from Open Food Facts and are kept on your phone for next time.",
                 style = MaterialTheme.typography.bodySmall, color = p.muted, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth(),

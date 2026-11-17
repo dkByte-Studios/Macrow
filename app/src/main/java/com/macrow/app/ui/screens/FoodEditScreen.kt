@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.CameraAlt
 import androidx.compose.material.icons.rounded.ExpandLess
 import androidx.compose.material.icons.rounded.ExpandMore
 import androidx.compose.material3.Icon
@@ -36,6 +37,7 @@ import com.macrow.app.MacrowApp
 import com.macrow.app.data.Food
 import com.macrow.app.data.OpenFoodFacts
 import com.macrow.app.data.Source
+import com.macrow.app.domain.LabelPrefill
 import com.macrow.app.domain.Limits
 import com.macrow.app.domain.pretty
 import com.macrow.app.ui.UiErrors
@@ -52,27 +54,28 @@ private fun String.num(): Double? = replace(',', '.').trim().toDoubleOrNull()?.t
 
 /** Create a food, or edit one (id 0 means new). Numbers are per serving. */
 @Composable
-fun FoodEditScreen(foodId: Long, barcode: String?, onBack: () -> Unit, onSaved: (Long) -> Unit) {
+fun FoodEditScreen(foodId: Long, barcode: String?, prefill: LabelPrefill?, onScanLabel: () -> Unit, onBack: () -> Unit, onSaved: (Long) -> Unit) {
+    val pv = if (foodId == 0L) prefill?.values else null
     val repo = (LocalContext.current.applicationContext as MacrowApp).repo
     val scope = rememberCoroutineScope()
     var loaded by rememberSaveable { mutableStateOf(foodId == 0L) }
     var original by remember { mutableStateOf<Food?>(null) }
     var name by rememberSaveable { mutableStateOf("") }
-    var serving by rememberSaveable { mutableStateOf("1 serving") }
-    var grams by rememberSaveable { mutableStateOf("100") }
-    var kcal by rememberSaveable { mutableStateOf("") }
-    var protein by rememberSaveable { mutableStateOf("") }
-    var carbs by rememberSaveable { mutableStateOf("") }
-    var fat by rememberSaveable { mutableStateOf("") }
-    var fiber by rememberSaveable { mutableStateOf("") }
-    var sugar by rememberSaveable { mutableStateOf("") }
-    var sodium by rememberSaveable { mutableStateOf("") }
-    var iron by rememberSaveable { mutableStateOf("") }
-    var calcium by rememberSaveable { mutableStateOf("") }
-    var vitC by rememberSaveable { mutableStateOf("") }
-    var potassium by rememberSaveable { mutableStateOf("") }
+    var serving by rememberSaveable { mutableStateOf(if (foodId == 0L) prefill?.servingLabel ?: "1 serving" else "1 serving") }
+    var grams by rememberSaveable { mutableStateOf(if (foodId == 0L) prefill?.servingGrams?.pretty() ?: "100" else "100") }
+    var kcal by rememberSaveable { mutableStateOf(pv?.kcal?.pretty() ?: "") }
+    var protein by rememberSaveable { mutableStateOf(pv?.protein?.pretty() ?: "") }
+    var carbs by rememberSaveable { mutableStateOf(pv?.carbs?.pretty() ?: "") }
+    var fat by rememberSaveable { mutableStateOf(pv?.fat?.pretty() ?: "") }
+    var fiber by rememberSaveable { mutableStateOf(pv?.fiber?.pretty() ?: "") }
+    var sugar by rememberSaveable { mutableStateOf(pv?.sugar?.pretty() ?: "") }
+    var sodium by rememberSaveable { mutableStateOf(pv?.sodiumMg?.pretty() ?: "") }
+    var iron by rememberSaveable { mutableStateOf(pv?.ironMg?.pretty() ?: "") }
+    var calcium by rememberSaveable { mutableStateOf(pv?.calciumMg?.pretty() ?: "") }
+    var vitC by rememberSaveable { mutableStateOf(pv?.vitCMg?.pretty() ?: "") }
+    var potassium by rememberSaveable { mutableStateOf(pv?.potassiumMg?.pretty() ?: "") }
     var code by rememberSaveable { mutableStateOf(barcode ?: "") }
-    var more by rememberSaveable { mutableStateOf(false) }
+    var more by rememberSaveable { mutableStateOf(pv != null && listOf(pv.fiber, pv.sugar, pv.sodiumMg, pv.ironMg, pv.calciumMg, pv.vitCMg, pv.potassiumMg).any { it != null }) }
     var tried by rememberSaveable { mutableStateOf(false) }
     var confirmDelete by rememberSaveable { mutableStateOf(false) }
 
@@ -118,6 +121,19 @@ fun FoodEditScreen(foodId: Long, barcode: String?, onBack: () -> Unit, onSaved: 
     Column(Modifier.fillMaxSize().imePadding()) {
         TopBar(if (foodId == 0L) "Create food" else "Edit food", onBack = onBack)
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            if (prefill != null && foodId == 0L) {
+                MacrowCard(Modifier.fillMaxWidth()) {
+                    Text("Filled in from the label", style = MaterialTheme.typography.titleSmall)
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        "Check each number against the package, then give the food a name." +
+                            if (prefill.guessed) " The label did not say whether these are per serving, so check the serving size too." else "",
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                }
+            } else if (foodId == 0L) {
+                SoftButton("Fill in from a label", onScanLabel, Modifier.fillMaxWidth(), tone = Tone.Blue, icon = Icons.Rounded.CameraAlt)
+            }
             MacrowField(name, { name = it }, "Name", Modifier.fillMaxWidth(), error = nameErr)
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 MacrowField(serving, { serving = it }, "Serving", Modifier.weight(1f), maxLength = 30)

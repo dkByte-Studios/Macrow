@@ -26,6 +26,7 @@
 - **Daily diary.** Log breakfast, lunch, dinner and snacks. A calorie ring shows what is left, with bars for protein, carbs and fat. Go back to any earlier day.
 - **Foods ready to use.** About 250 foods come built in: Filipino favorites like adobo, sinigang and pandesal, everyday foods from around the world, and fast food from places like Jollibee, McDonald's, KFC, Chowking, Mang Inasal and Mister Donut, plus street food. Fast food values are estimates: check the box and edit any food to match.
 - **Search and scan.** Search your foods, or look one up online. Point the camera at a barcode, or type its numbers, to fill in the nutrition facts. Foods you look up are kept for next time.
+- **Nutrition label scanner.** When a product is not in the database, take a photo of its nutrition facts panel (or choose one from your gallery). Macrow reads it on your phone and fills in the food for you to check and save. It copes with a single column, a per serving and per 100 g table, kilojoules and salt.
 - **Your own foods and recipes.** Create a food, or build a recipe from ingredients and log one serving of it.
 - **Targets that fit you.** Tell Macrow your goal, age, height, weight and activity. It works out your calories and macros, and you can change them any time.
 - **Diet coach.** Every day gets a short review: what you ate, how your calories split between protein, carbs and fat, what went well, and what to fix. It points out low protein, high salt, a heavy dinner or too little water, and suggests foods that would help. It runs on your phone from your own numbers.
@@ -49,11 +50,11 @@
 
 - An Android phone with Android 8.0 or newer.
 - Internet only when you search or scan a food online. Everything else works offline.
-- Camera permission, only if you want to scan barcodes. Pictures are read on the phone and never saved or sent. You can always type the barcode instead.
+- Camera permission, only if you want to scan barcodes or labels. Pictures are read on the phone and never saved or sent. You can always type the barcode instead.
 
 ## Built with
 
-Kotlin, Jetpack Compose with Material 3, Room, DataStore, Navigation Compose, WorkManager, CameraX, ML Kit barcode scanning, Open Food Facts, Gradle (Kotlin DSL) with a version catalog. Fonts: Bricolage Grotesque and Figtree (bundled).
+Kotlin, Jetpack Compose with Material 3, Room, DataStore, Navigation Compose, WorkManager, CameraX, ML Kit barcode and text recognition, Open Food Facts, Gradle (Kotlin DSL) with a version catalog. Fonts: Bricolage Grotesque and Figtree (bundled).
 
 ## Status
 

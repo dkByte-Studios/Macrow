@@ -34,6 +34,9 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.macrow.app.data.MacrowRepository
+import com.macrow.app.data.parseLabelPrefill
+import com.macrow.app.data.toJson
+import com.macrow.app.ui.screens.LabelScreen
 import com.macrow.app.data.Settings
 import com.macrow.app.domain.Meal
 import com.macrow.app.ui.components.FloatingNav
@@ -127,17 +130,41 @@ fun MacrowRoot(settings: Settings) {
                             newFoodId = newId, onNewFoodHandled = { handle[NEW_FOOD] = 0L },
                             onBack = { nav.popBackStack() },
                             onCreateWithBarcode = { code -> nav.navigate("food/0?barcode=$code") },
+                            onScanLabel = { code -> nav.navigate("label?barcode=${code ?: ""}&fromFood=0") },
                         )
                     }
                     composable(
-                        "food/{id}?barcode={barcode}",
-                        listOf(navArgument("id") { type = NavType.LongType }, navArgument("barcode") { type = NavType.StringType; defaultValue = "" }),
+                        "food/{id}?barcode={barcode}&label={label}",
+                        listOf(
+                            navArgument("id") { type = NavType.LongType },
+                            navArgument("barcode") { type = NavType.StringType; defaultValue = "" },
+                            navArgument("label") { type = NavType.StringType; defaultValue = "" },
+                        ),
                     ) { entry ->
                         val id = entry.arguments!!.getLong("id")
+                        val code = entry.arguments!!.getString("barcode")?.ifEmpty { null }
+                        val prefill = remember { parseLabelPrefill(entry.arguments!!.getString("label")) }
                         FoodEditScreen(
-                            id, entry.arguments!!.getString("barcode")?.ifEmpty { null },
+                            id, code, prefill,
+                            onScanLabel = { nav.navigate("label?barcode=${code ?: ""}&fromFood=1") },
                             onBack = { nav.popBackStack() },
                             onSaved = { saved -> nav.finishWithResult(if (id == 0L) saved else 0L) },
+                        )
+                    }
+                    composable(
+                        "label?barcode={barcode}&fromFood={fromFood}",
+                        listOf(navArgument("barcode") { type = NavType.StringType; defaultValue = "" }, navArgument("fromFood") { type = NavType.IntType; defaultValue = 0 }),
+                    ) { entry ->
+                        val code = entry.arguments!!.getString("barcode").orEmpty()
+                        val fromFood = entry.arguments!!.getInt("fromFood") == 1
+                        LabelScreen(
+                            onBack = { nav.popBackStack() },
+                            onResult = { pre ->
+                                // Replace the scan screen, and the empty form it came from, with a form filled in from the label.
+                                nav.popBackStack()
+                                if (fromFood) nav.popBackStack()
+                                nav.navigate("food/0?barcode=$code&label=${android.net.Uri.encode(pre.toJson())}")
+                            },
                         )
                     }
                     composable("recipe/{id}", listOf(navArgument("id") { type = NavType.LongType })) { entry ->
