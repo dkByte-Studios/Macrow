@@ -24,7 +24,7 @@
 ## Features
 
 - **Daily diary.** Log breakfast, lunch, dinner and snacks. A calorie ring shows what is left, with bars for protein, carbs and fat. Go back to any earlier day.
-- **Foods ready to use.** Close to 200 foods come built in: Filipino favorites like adobo, sinigang and pandesal, and everyday foods from around the world, such as salmon, pasta, sushi, burritos and oats. Edit any of them.
+- **Foods ready to use.** About 250 foods come built in: Filipino favorites like adobo, sinigang and pandesal, everyday foods from around the world, and fast food from places like Jollibee, McDonald's, KFC, Chowking, Mang Inasal and Mister Donut, plus street food. Fast food values are estimates: check the box and edit any food to match.
 - **Search and scan.** Search your foods, or look one up online. Point the camera at a barcode, or type its numbers, to fill in the nutrition facts. Foods you look up are kept for next time.
 - **Your own foods and recipes.** Create a food, or build a recipe from ingredients and log one serving of it.
 - **Targets that fit you.** Tell Macrow your goal, age, height, weight and activity. It works out your calories and macros, and you can change them any time.
@@ -65,4 +65,4 @@ All Rights Reserved. See [LICENSE](LICENSE).
 
 ## Credits
 
-Food data from [Open Food Facts](https://world.openfoodfacts.org), available under the Open Database License. The built-in foods are typical values, not lab results. Calorie and nutrient targets are estimates, not medical advice.
+Brand names belong to their owners and are used only to help you find a food. Food data from [Open Food Facts](https://world.openfoodfacts.org), available under the Open Database License. The built-in foods are typical values, not lab results. Calorie and nutrient targets are estimates, not medical advice.

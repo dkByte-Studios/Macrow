@@ -14,8 +14,8 @@ android {
         applicationId = "com.macrow.app"
         minSdk = 26
         targetSdk = 37
-        versionCode = 2
-        versionName = "1.1"
+        versionCode = 3
+        versionName = "1.2"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64") } // real phones and the emulator; drops the rare 32-bit x86
     }

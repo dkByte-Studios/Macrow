@@ -90,6 +90,6 @@ val FilipinoFoods: List<Food> = listOf(
 )
 
 /** Bump this when foods are added to the lists, so phones that already have the old list get the new ones too. */
-const val BUILTIN_VERSION = 2
+const val BUILTIN_VERSION = 3
 
-val BuiltInFoods: List<Food> = FilipinoFoods + WorldFoods
+val BuiltInFoods: List<Food> = FilipinoFoods + WorldFoods + FastFoodPH

@@ -131,7 +131,7 @@ class LogicTest {
     }
 
     @Test fun builtInFoodsAreSane() {
-        assertTrue(BuiltInFoods.size > 180)
+        assertTrue(BuiltInFoods.size > 240)
         assertTrue(BuiltInFoods.all { it.source == Source.BUILTIN && it.name.isNotBlank() && it.kcal >= 0 && it.servingGrams > 0 })
         assertEquals(BuiltInFoods.size, BuiltInFoods.map { it.name }.toSet().size)
         // Calories roughly match the macros (4/4/9), within 25 percent, for foods with any calories.
